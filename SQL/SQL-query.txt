@@ -1,0 +1,549 @@
+--Создание таблиц:
+
+CREATE TABLE genre(
+    genre_id INT PRIMARY KEY AUTO_INCREMENT, 
+    name_genre VARCHAR(30)
+);
+
+CREATE TABLE book(
+    book_id INT PRIMARY KEY AUTO_INCREMENT, 
+    title VARCHAR(50),
+    author VARCHAR(30),
+    price DECIMAL(8, 2),
+    amount INT
+);
+
+--Вставка записи в таблицу:
+
+INSERT INTO genre (name_genre) 
+VALUES 
+  ('Роман');
+
+INSERT INTO book(title, author, price, amount) 
+VALUES 
+  (
+    'Мастер и Маргарита', 
+    'Булгаков М.А.',
+    670.99, 
+    3
+  );
+/*______________________________________________*/
+
+--Запрос данных из таблицы:
+
+SELECT 
+  * 
+FROM 
+  genre;
+
+--Запрос стобцов из таблицы:
+
+SELECT
+  author,
+  title,
+  price
+FROM
+  book;
+
+--Выборка отдельных столбцов и присвоение им новых имен:
+
+SELECT 
+  title AS Название,
+  author AS Автор
+FROM
+  book;
+
+--Выборка данных с созданием вычисляемого столбца:
+
+SELECT 
+  title, 
+  author, 
+  price, 
+  amount, 
+  price * amount AS total 
+FROM 
+  book;
+
+--Выборка данных, вычисляемые столбцы, математические функции:
+
+https://docs.microsoft.com/ru-ru/sql/t-sql/functions/mathematical-functions-transact-sql?view=sql-server-ver15
+
+--Выборка данных, вычисляемые столбцы, логические функции:
+
+SELECT
+  author,
+  title,
+  ROUND(
+    IF(
+      author = 'Булгаков М.А.',
+      price * 1.1,
+      IF(
+        author = 'Есенин С.А.',
+        price * 1.05,
+        price
+        )
+      ),
+      2
+    ) AS new_price
+FROM
+  book;
+
+--Выборка данных по условию:
+
+SELECT
+  author,
+  title,
+  price
+FROM
+  book
+WHERE
+  amount < 10;
+
+--Выборка данных, логические операции:
+
+SELECT 
+  title, 
+  author, 
+  price, 
+  amount 
+FROM 
+  book 
+WHERE 
+  (
+    price > 600 
+    OR price < 500
+  ) 
+  AND price * amount > 5000;
+
+--Выборка данных, операторы BETWEEN, IN:
+
+SELECT 
+  title, 
+  author 
+FROM 
+  book 
+WHERE 
+  (
+    price BETWEEN 540.50 
+    AND 800
+  ) 
+  AND (
+    amount IN (2, 3, 5, 7)
+  );
+
+--Выборка данных, оператор LIKE:
+
+SELECT 
+  title, 
+  author 
+FROM 
+  book 
+WHERE 
+  title LIKE '%_ _%' 
+  AND (
+    author LIKE '% С._.' 
+    OR author LIKE '% _.С.'
+  );
+
+ --Выборка данных с сортировкой:
+
+ SELECT 
+  author, 
+  title 
+FROM 
+  book 
+WHERE 
+  amount BETWEEN 2 
+  AND 14 
+ORDER BY 
+  author DESC, 
+  title;
+
+/*______________________________________________*/
+
+--Выбор различных элементов столбца:
+
+SELECT
+  DISTINCT amount
+FROM
+  book;
+
+ --Выборка данных, групповые функции SUM и COUNT:
+
+ SELECT 
+  author as Автор, 
+  COUNT(author) AS Различных_книг, 
+  SUM(amount) AS Количество_экземпляров 
+FROM 
+  book 
+GROUP BY 
+  author;
+
+--Выборка данных, групповые функции MIN, MAX и AVG:
+
+SELECT
+  author,
+  MIN(price) AS Минимальная_цена,
+  MAX(price) AS Максимальная_цена,
+  AVG(price) AS Средняя_цена
+FROM
+  book
+GROUP BY
+  author
+
+--Выборка данных c вычислением, групповые функции:
+
+SELECT 
+  author, 
+  SUM(price * amount) AS Стоимость, 
+  ROUND(
+    (
+      SUM(price * amount) * 18 / 100
+    ) / (1 + 18 / 100), 
+    2
+  ) AS НДС, 
+  ROUND(
+    SUM(price * amount) / (1 + 18 / 100), 
+    2
+  ) AS Стоимость_без_НДС 
+FROM 
+  book 
+GROUP BY 
+  author;
+
+  --Вычисления по таблице целиком:
+
+  SELECT 
+  MIN(price) AS Минимальная_цена, 
+  MAX(price) AS Максимальная_цена, 
+  ROUND(
+    AVG(price), 
+    2
+  ) AS Средняя_цена 
+FROM 
+  book;
+
+--Выборка данных по условию, групповые функции:
+
+SELECT 
+  author, 
+  MIN(price) AS Минимальная_цена, 
+  MAX(price) AS Максимальная_цена 
+FROM 
+  book 
+GROUP BY 
+  author 
+HAVING 
+  SUM(price * amount) > 5000 
+ORDER BY 
+  Минимальная_цена DESC;
+
+--Выборка данных по условию, групповые функции, WHERE и HAVING:
+
+SELECT 
+  author, 
+  SUM(price * amount) AS Стоимость 
+FROM 
+  book 
+WHERE 
+  title <> 'Идиот' 
+  AND title <> 'Белая гвардия' 
+GROUP BY 
+  author 
+HAVING 
+  SUM(price * amount) > 5000 
+ORDER BY 
+  Стоимость DESC;
+
+ /*______________________________________________*/
+
+ порядок выполнения  SQL запроса на выборку на сервере:
+
+1. FROM
+2. WHERE
+3. GROUP BY
+4. HAVING
+5. SELECT
+6. ORDER BY
+
+ /*______________________________________________*/
+
+--Вложенный запрос, возвращающий одно значение:
+
+SELECT 
+  author, 
+  title, 
+  price 
+FROM 
+  book 
+WHERE 
+  price <= (
+    SELECT 
+      AVG(price) 
+    FROM 
+      book
+  ) 
+ORDER BY 
+  price DESC;
+
+--Использование вложенного запроса в выражении:
+
+SELECT 
+  author, 
+  title, 
+  price 
+FROM 
+  book 
+WHERE 
+  (
+    price - (
+      SELECT 
+        MIN(price) 
+      FROM 
+        book
+    )
+  ) <= 150 
+ORDER BY 
+  price ASC;
+
+--Вложенный запрос, оператор IN:
+
+SELECT 
+  title, 
+  author, 
+  amount, 
+  price 
+FROM 
+  book 
+WHERE 
+  author IN (
+    SELECT 
+      author 
+    FROM 
+      book 
+    GROUP BY 
+      author 
+    HAVING 
+      SUM(amount) >= 12
+  );
+
+SELECT 
+  author, 
+  title, 
+  amount 
+FROM 
+  book 
+WHERE 
+  amount IN (
+    SELECT 
+      amount 
+    FROM 
+      book 
+    GROUP BY 
+      amount 
+    HAVING 
+      COUNT(amount) = 1
+  );
+
+--Вложенный запрос, операторы ANY и ALL:
+
+--ANY выбирает самый большой из списка
+SELECT 
+  author, 
+  title, 
+  price 
+FROM 
+  book 
+WHERE 
+  price < ANY(
+    SELECT 
+      MIN(price) 
+    FROM 
+      book 
+    GROUP BY 
+      author
+  );
+
+--ALL выбирает самый маленький из списка
+SELECT 
+  title, 
+  author, 
+  amount, 
+  price 
+FROM 
+  book 
+WHERE 
+  amount < ALL (
+    SELECT 
+      AVG(amount) 
+    FROM 
+      book 
+    GROUP BY 
+      author
+  );
+
+--Вложенный запрос после SELECT:
+
+SELECT 
+  title, 
+  author, 
+  amount, 
+  (
+    (
+      SELECT 
+        MAX(amount) 
+      FROM 
+        book
+    ) - amount
+  ) AS Заказ 
+FROM 
+  book 
+WHERE 
+  amount < ANY(
+    SELECT 
+      MAX(amount) 
+    FROM 
+      book
+  );
+ /*______________________________________________*/
+
+--Добавление записей из другой таблицы:
+
+INSERT INTO book (title, author, price, amount) 
+SELECT 
+  title, 
+  author, 
+  price, 
+  amount 
+FROM 
+  supply;
+
+INSERT INTO book(title, author, price, amount) 
+SELECT 
+  title, 
+  author, 
+  price, 
+  amount 
+FROM 
+  supply 
+WHERE 
+  author NOT IN (
+    'Булгаков М.А.', 'Достоевский Ф.М.'
+  );
+
+--Добавление записей, вложенные запросы:
+
+INSERT INTO book (title, author, price, amount) 
+SELECT 
+  title, 
+  author, 
+  price, 
+  amount 
+FROM 
+  supply 
+WHERE 
+  title NOT IN (
+    SELECT 
+      title 
+    FROM 
+      book
+  );
+
+--Запросы на обновление:
+
+UPDATE
+  book
+SET
+  price = price * 0.9
+WHERE
+  amount IN (5, 10);
+
+--Запросы на обновление нескольких столбцов:
+
+UPDATE 
+  book 
+SET 
+  buy = IF(buy > amount, amount, buy), 
+  price = IF(buy = 0, price * 0.9, price);
+
+--Запросы на обновление, несколько таблиц:
+
+UPDATE 
+  book, 
+  supply 
+SET 
+  book.amount = book.amount + supply.amount 
+WHERE 
+  book.title = supply.title 
+  AND book.author = supply.author;
+
+UPDATE 
+  book, 
+  supply 
+SET 
+  book.amount = book.amount + supply.amount, 
+  book.price = (book.price + supply.price)/ 2 
+WHERE 
+  book.title = supply.title 
+  AND book.author = supply.author;
+
+--Запросы на удаление:
+
+DELETE FROM 
+  supply 
+WHERE 
+  title IN (
+    SELECT 
+      title 
+    FROM 
+      book
+  );
+
+DELETE FROM 
+  supply 
+WHERE 
+  author IN(
+    SELECT 
+      author 
+    FROM 
+      book 
+    WHERE 
+      amount >= 10
+  );
+
+--Запросы на создание таблицы:
+
+CREATE TABLE ordering AS 
+SELECT 
+  author, 
+  title, 
+  5 AS amount 
+FROM 
+  book 
+WHERE 
+  amount < 4;
+
+CREATE TABLE ordering AS 
+SELECT 
+  author, 
+  title, 
+  (
+    SELECT 
+      ROUND(
+        AVG(amount)
+      ) 
+    FROM 
+      book
+  ) AS amount 
+FROM 
+  book 
+WHERE 
+  amount < (
+    SELECT 
+      ROUND(
+        AVG(amount)
+      ) 
+    FROM 
+      book
+  );
+ /*______________________________________________*/
