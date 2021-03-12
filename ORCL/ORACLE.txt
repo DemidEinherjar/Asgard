@@ -1,0 +1,100 @@
+sqlplus sys/ESDU_orcl44 as sysdba/orcl --вход в ORCL под пользователем sys
+
+alter user TNPKSUser account unlock; --разблокирование пользователя ORCL
+
+select * from v$parameter --все параметры ORCL
+
+select * from v$datafile --все DP_FILES
+
+crsctl stop cluster -all --остановка кластера
+
+srvctl start database -db orcl --запуск кластера
+
+crsctl stat res -t --состояние кластера
+
+srvctl start instance -d orcl -n si44b --запуск базы
+
+select * from arc_log order by ts --arc_log сортировка по времени
+
+select * from arc_log where type = 'E' or type = 'W'
+
+https://www.sites.google.com/site/paxdevsystem/oracle/admin/tablespase-and-index/ora-01654-unable-to-extend-index-in-tablespace --инфа по тэйбспэйсам
+
+ALTER SYSTEM SET DB_FILES=10000 SCOPE=SPFILE  --Число опционально (но не более 65 000). Добавление DB_FILES
+______________________________________________________________________________
+SELECT
+  df.tablespace_name "Tablespace",
+  totalusedspace "Used MB",
+  (df.totalspace - tu.totalusedspace) "Free MB",
+  df.totalspace "Total MB",
+  ROUND(100 * ( (df.totalspace - tu.totalusedspace)/ df.totalspace))
+  "Pct. Free"
+FROM
+  (SELECT tablespace_name,
+  ROUND(SUM(bytes) / 1048576) TotalSpace
+  FROM dba_data_files
+  GROUP BY tablespace_name) df,
+ 
+  (SELECT ROUND(SUM(bytes)/(1024*1024)) totalusedspace, tablespace_name
+   FROM dba_segments
+   GROUP BY tablespace_name) tu
+WHERE df.tablespace_name = tu.tablespace_name ; --запрос всех табличных пространств с их параметрами памяти (всего, использовано, свободно)
+______________________________________________________________________________
+
+select * from v$rman_backup_job_details --контроль резервного копирования
+
+rman target orcl --войти в rman 
+
+backup archivelog all delete all input; --бэкап архлоги и удаление после бэкапа
+backup archivelog all not backed up delete all input;
+______________________________________________________________________________
+delete from TNPKSUSER.elements where element_name in 
+(
+  select element_name from 
+  (
+    select element_name, count(element_name)
+    from elements
+    group by element_name
+    having count (element_name) > 1
+  )
+);  --поиск дублирующихся значений
+______________________________________________________________________________
+SELECT group_name, COUNT(*) --кол-во сигналов по архивным группам
+FROM elements
+GROUP BY group_name
+ORDER BY COUNT(*) DESC;
+______________________________________________________________________________
+______________________________________________________________________________
+--искать хуярящие параметры
+select element_id "ELEM", element_name from elements where element_id in
+(
+  select "ELEM" from
+  (
+    select * from
+    (
+      select element_id "ELEM", count(*) "COUNT" from tir1zdvhistory_00000152
+        where TS > '24.09.2020 00:00:00,000' 
+        and TS < '24.09.2020 04:00:00,000'
+        group by element_id
+        order by count(*) desc
+    )
+    WHERE "COUNT" > 14400
+  )  
+);
+______________________________________________________________________________
+
+DELETE
+FROM
+    sales
+WHERE
+    order_id = 1
+    AND item_id = 1; --удаление строк из табличного пространства
+______________________________________________________________________________
+
+SELECT
+  *
+FROM
+  v$session
+WHERE
+  username IS NOT NULL ; --просмотр всех активных сессий
+______________________________________________________________________________
