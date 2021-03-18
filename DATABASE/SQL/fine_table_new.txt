@@ -67,7 +67,7 @@ SELECT
 FROM 
   fine;
 
- --1.7.6
+ --1.7.7
 /*
 Необходимо:
 Создать новую таблицу back_payment,
@@ -91,3 +91,18 @@ SELECT
   * 
 FROM 
   back_payment;
+
+ --1.7.8
+/*
+Удалить из таблицы fine информацию о нарушениях,
+совершенных раньше 1 февраля 2020 года. 
+*/
+DELETE FROM 
+  fine 
+WHERE 
+  date_violation < '2020-02-01';
+SELECT 
+  * 
+FROM 
+  fine;
+
