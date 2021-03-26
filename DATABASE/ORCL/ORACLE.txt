@@ -77,6 +77,13 @@ SELECT
 FROM
   v$instance;
 
+--узнать SNAPSHOT
+SELECT
+  *
+FROM
+ dba_hist_snapshot;
+ 
+
 --Добавление DB_FILES. Число опционально (но не более 65 000)
 ALTER SYSTEM SET DB_FILES = 10000 SCOPE = SPFILE
 ______________________________________________________________________________
