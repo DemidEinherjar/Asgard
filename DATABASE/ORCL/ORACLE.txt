@@ -65,6 +65,12 @@ SELECT
 FROM
   v$rman_backup_job_details;
 
+--узнать DBID
+SELECT
+  DBID
+FROM
+  v$database;
+
 --Добавление DB_FILES. Число опционально (но не более 65 000)
 ALTER SYSTEM SET DB_FILES = 10000 SCOPE = SPFILE
 ______________________________________________________________________________
