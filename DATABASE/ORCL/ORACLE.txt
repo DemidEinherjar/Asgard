@@ -82,7 +82,12 @@ SELECT
   *
 FROM
  dba_hist_snapshot;
- 
+
+ --узнать кол-ва места в области DATA и FRA (ASMA)
+SELECT
+  *
+FROM
+  v$asm_diskgroup_stat;
 
 --Добавление DB_FILES. Число опционально (но не более 65 000)
 ALTER SYSTEM SET DB_FILES = 10000 SCOPE = SPFILE
