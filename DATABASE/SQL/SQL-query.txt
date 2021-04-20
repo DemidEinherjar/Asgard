@@ -851,3 +851,118 @@ ORDER BY
 
 --Операция соединение, использование USING()
 
+SELECT 
+  title, 
+  name_author, 
+  author_id 
+  /* имя таблицы, из которой берется author_id, указывать не обязательно*/
+FROM 
+  author 
+  INNER JOIN book USING(author_id);
+
+SELECT 
+  book.title AS Название, 
+  name_author AS Автор, 
+  (book.amount + supply.amount) AS Количество 
+FROM 
+  author 
+  INNER JOIN book USING(author_id) 
+  INNER JOIN supply ON book.title = supply.title 
+  AND book.price = supply.price;
+/*______________________________________________*/
+
+--Запросы корректировки, соединение таблиц
+
+--Запросы на обновление, связанные таблицы
+
+UPDATE book 
+     INNER JOIN author ON author.author_id = book.author_id
+     INNER JOIN supply ON book.title = supply.title 
+                         and supply.author = author.name_author
+SET book.amount = book.amount + supply.amount,
+    supply.amount = 0   
+WHERE book.price = supply.price;
+
+UPDATE 
+  book 
+  INNER JOIN author ON author.author_id = book.author_id 
+  INNER JOIN supply ON book.title = supply.title 
+  AND supply.author = author.name_author 
+SET 
+  book.amount = book.amount + supply.amount, 
+  book.price = (
+    (
+      (book.price * book.amount) + (supply.price * supply.amount)
+    )/(book.amount + supply.amount)
+  ), 
+  supply.amount = 0 
+WHERE 
+  book.price <> supply.price;
+
+--Запросы на добавление, связанные таблицы
+
+--сначала отберем авторов, которые есть в supply, но нет в author
+SELECT 
+  name_author, 
+  supply.author 
+FROM 
+  author 
+  RIGHT JOIN supply ON author.name_author = supply.author;
+--теперь сам запрос на запись новых авторос
+INSERT INTO author(name_author) 
+SELECT 
+  supply.author 
+FROM 
+  author 
+  RIGHT JOIN supply ON author.name_author = supply.author 
+WHERE 
+  name_author IS Null;
+
+--Запрос на добавление, связанные таблицы
+
+INSERT INTO book(title, author_id, price, amount) 
+SELECT 
+  title, 
+  author_id, 
+  price, 
+  amount 
+FROM 
+  author 
+  INNER JOIN supply ON author.name_author = supply.author 
+WHERE 
+  amount <> 0;
+
+--Запрос на обновление, вложенные запросы
+
+UPDATE book
+SET genre_id = 
+      (
+       SELECT genre_id 
+       FROM genre 
+       WHERE name_genre = 'Роман'
+      )
+WHERE book_id = 9;
+
+--Каскадное удаление записей связанных таблиц
+
+DELETE FROM 
+  author 
+WHERE 
+  name_author LIKE "Д%";
+
+DELETE FROM 
+  author 
+WHERE 
+  author_id IN (
+    SELECT 
+      author_id 
+    FROM 
+      book 
+    GROUP BY 
+      author_id 
+    HAVING 
+      SUM(amount) < 20
+  );
+
+--Удаление записей главной таблицы с сохранением записей в зависимой
+
