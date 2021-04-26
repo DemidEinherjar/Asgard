@@ -966,3 +966,27 @@ WHERE
 
 --Удаление записей главной таблицы с сохранением записей в зависимой
 
+DELETE FROM 
+  genre 
+WHERE 
+  genre_id IN (
+    SELECT 
+      genre_id 
+    FROM 
+      book
+    GROUP BY
+      genre_id
+    HAVING
+      COUNT(title) < 4
+  );
+
+--Удаление записей, использование связанных таблиц
+
+DELETE FROM 
+  author USING author 
+  INNER JOIN book ON author.author_id = book.author_id
+  INNER JOIN genre ON book.genre_id = genre.genre_id
+WHERE 
+  genre.name_genre LIKE 'Поэзия';
+
+
