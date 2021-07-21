@@ -61,4 +61,16 @@ def bottles_of_beer(bob):
     print(f'{tmp} бутылок пива на стене. {tmp} бутылок пива.'
         f'Возьми одну, пусти по кругу, {bob} бутылок на стене.')
     bottles_of_beer(bob)
-bottles_of_beer(99)
+#bottles_of_beer(99)
+
+#Фибоначи
+def fib():
+    a, b = 1, 1
+    while True:
+        yield a
+        a, b = b, a + b
+
+for index, x in enumerate(fib()):
+    if index == 10:
+        break
+    print("%s" % x),
